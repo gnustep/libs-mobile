@@ -6,6 +6,8 @@
 
    Author: Gregory Casamento
    Date: January 2011
+   Author: Fred Kiefer
+   Date: Febuary 2011
 
    This file is part of the GNUstep UIKit/Mobile Library.
 
@@ -27,17 +29,50 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
 
-@interface UIEvent : NSEvent
+@class UIGestureRecognizer, UIView, UIWindow;
+
+typedef enum {
+  UIEventTypeTouches,
+  UIEventTypeMotion,
+  UIEventTypeRemoteControl,
+} UIEventType;
+
+typedef enum {
+  UIEventSubtypeNone                              = 0,
+  
+  UIEventSubtypeMotionShake                       = 1,
+  
+  UIEventSubtypeRemoteControlPlay                 = 100,
+  UIEventSubtypeRemoteControlPause                = 101,
+  UIEventSubtypeRemoteControlStop                 = 102,
+  UIEventSubtypeRemoteControlTogglePlayPause      = 103,
+  UIEventSubtypeRemoteControlNextTrack            = 104,
+  UIEventSubtypeRemoteControlPreviousTrack        = 105,
+  UIEventSubtypeRemoteControlBeginSeekingBackward = 106,
+  UIEventSubtypeRemoteControlEndSeekingBackward   = 107,
+  UIEventSubtypeRemoteControlBeginSeekingForward  = 108,
+  UIEventSubtypeRemoteControlEndSeekingForward    = 109,
+} UIEventSubtype;
+
+@interface UIEvent : NSObject
 {
 }
 
 /*
  * Properties...
  */
+//@property(readonly) UIEventSubtype subtype;
+//@property(nonatomic, readonly) NSTimeInterval timestamp;
+//@property(readonly) UIEventType type;
+
 
 /*
  * Methods
  */
+- (NSSet *) allTouches;
+- (NSSet *) touchesForGestureRecognizer: (UIGestureRecognizer *)gesture;
+- (NSSet *) touchesForView: (UIView *)view;
+- (NSSet *) touchesForWindow: (UIWindow *)window;
+
 @end

@@ -6,6 +6,8 @@
 
    Author: Gregory Casamento
    Date: January 2011
+   Author: Fred Kiefer
+   Date: Febuary 2011
 
    This file is part of the GNUstep UIKit/Mobile Library.
 
@@ -27,7 +29,6 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
 
 @class UIViewController, UIScreen, UIEvent;
 
@@ -36,19 +37,49 @@ const UIWindowLevel UIWindowLevelNormal = 0;
 const UIWindowLevel UIWindowLevelAlert = 1;
 const UIWindowLevel UIWindowLevelStatusBar = 2;
 
-@interface UIWindow : NSWindow
+NSString *const UIKeyboardFrameBeginUserInfoKey;
+NSString *const UIKeyboardFrameEndUserInfoKey;
+NSString *const UIKeyboardAnimationDurationUserInfoKey;
+NSString *const UIKeyboardAnimationCurveUserInfoKey;
+   
+// Deprecated in iOS 3.2 and later.
+NSString *const UIKeyboardCenterBeginUserInfoKey;
+NSString *const UIKeyboardCenterEndUserInfoKey;
+NSString *const UIKeyboardBoundsUserInfoKey;
+
+NSString *const UIWindowDidBecomeVisibleNotification;
+NSString *const UIWindowDidBecomeHiddenNotification;
+NSString *const UIWindowDidBecomeKeyNotification;
+NSString *const UIWindowDidResignKeyNotification;
+NSString *const UIKeyboardWillShowNotification;
+NSString *const UIKeyboardDidShowNotification;
+NSString *const UIKeyboardWillHideNotification;
+NSString *const UIKeyboardDidHideNotification;
+
+@interface UIWindow : UIView
 {
   UIViewController *rootViewController;
+  UIScreen *screen;
+  UIWindowLevel windowLevel;
+  BOOL keyWindow;
 }
-
 /*
  * Properties...
  */
-- (BOOL) keyWindow;
+//@property(nonatomic, readonly, getter=isKeyWindow) BOOL keyWindow
+- (BOOL) isKeyWindow;
+
+//@property(nonatomic,retain) UIViewController *rootViewController
 - (void) setRootViewController: (UIViewController *)aViewController;
 - (UIViewController *) rootViewController;
+
+//@property (nonatomic,retain) UIScreen *screen
 - (UIScreen *) screen;
+- (void) setScreen; (UIScreen *)screen;
+
+//@property(nonatomic) UIWindowLevel windowLevel
 - (UIWindowLevel) windowLevel;
+- (void) setWindowLevel: (UIWindowLevel)windowLevel;
 
 /*
  * Methods

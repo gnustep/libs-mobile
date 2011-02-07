@@ -6,6 +6,8 @@
 
    Author: Gregory Casamento
    Date: January 2011
+   Author: Fred Kiefer
+   Date: Febuary 2011
 
    This file is part of the GNUstep UIKit/Mobile Library.
 
@@ -27,18 +29,32 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
 
-@interface UIScreen : NSScreen
+@class CADisplayLink, UIScreenMode;
+
+NSString *const UIScreenDidConnectNotification;
+NSString *const UIScreenDidDisconnectNotification;
+NSString *const UIScreenModeDidChangeNotification;
+
+@interface UIScreen : NSObject
 {
 }
 
 /*
  * Properties...
  */
+@property(nonatomic, readonly) CGRect applicationFrame;
+@property(nonatomic, readonly, copy) NSArray *availableModes;
+@property(nonatomic, readonly) CGRect bounds;
+@property(nonatomic, retain) UIScreenMode *currentMode;
+@property(nonatomic, readonly) CGFloat scale;
 
 /*
  * Methods
  */
++ (UIScreen *) mainScreen;
++ (NSArray *) screens;
+
+- (CADisplayLink *) displayLinkWithTarget: (id)target selector: (SEL)sel;
 
 @end

@@ -1,6 +1,6 @@
-/** <title>UIWindow</title>
+/** <title>UIViewController</title>
 
-   <abstract>The window class</abstract>
+   <abstract>The view controller class</abstract>
 
    Copyright (C) 2011 Free Software Foundation, Inc.
 
@@ -27,8 +27,7 @@
 */
 
 #import <Foundation/Foundation.h>
-#import <AppKit/AppKit.h>
-#import "UIResponder.h"
+#import "UIKit/UIResponder.h"
 
 @class UIView;
 
