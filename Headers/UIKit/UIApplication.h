@@ -41,6 +41,7 @@
 #import <GNUstepBase/GSVersionMacros.h>
 
 #import <UIKit/UIResponder.h>
+#import <UIKit/UIKitDefines.h>
 
 @class NSArray;
 @class NSAutoreleasePool;
@@ -70,15 +71,19 @@ enum {
 };
 
 
-UIKIT_EXPORT NSString	*NSEventTrackingRunLoopMode;
+UIKIT_EXPORT NSString	*UIEventTrackingRunLoopMode;
 
 @interface UIApplication : UIResponder
 {
-  NSEvent		*_current_event;
+  UIEvent		*_current_event;
   UIWindow		*_key_window;
   id			_delegate;
   // 6 bits
 
+  BOOL                  _app_is_running;
+  BOOL                  _app_is_active;
+  BOOL                  _app_is_launched;
+  BOOL                  _windows_need_update;
   /* This autorelease pool should only be created and used by -run, with
      a single exception (which is why it is stored here as an ivar): the
      -terminate: method will destroy this autorelease pool before exiting
@@ -116,20 +121,20 @@ UIKIT_EXPORT NSString	*NSEventTrackingRunLoopMode;
  */
 - (BOOL) isRunning;
 - (void) run;
-- (void) sendEvent: (NSEvent*)theEvent;
+- (void) sendEvent: (UIEvent*)theEvent;
 - (void) stop: (id)sender;
 
 /*
  * Getting, removing, and posting events
  */
-- (NSEvent*) currentEvent;
+- (UIEvent*) currentEvent;
 - (void) discardEventsMatchingMask: (unsigned int)mask
-		       beforeEvent: (NSEvent*)lastEvent;
-- (NSEvent*) nextEventMatchingMask: (unsigned int)mask
+		       beforeEvent: (UIEvent*)lastEvent;
+- (UIEvent*) nextEventMatchingMask: (unsigned int)mask
 			 untilDate: (NSDate*)expiration
 			    inMode: (NSString*)mode
 			   dequeue: (BOOL)flag;
-- (void) postEvent: (NSEvent*)event atStart: (BOOL)flag;
+- (void) postEvent: (UIEvent*)event atStart: (BOOL)flag;
 
 /*
  * Sending action messages
@@ -188,8 +193,8 @@ UIKIT_EXPORT NSString	*NSEventTrackingRunLoopMode;
  */
 UIKIT_EXPORT NSString	*UIApplicationWillEnterForegroundNotification;
 UIKIT_EXPORT NSString	*UIApplicationDidFinishLaunchingNotification;
-UIKIT_EXPORT NSString	*NSApplicationDidEnterBackgroundNotification;
-UIKIT_EXPORT NSString	*NSApplicationWillTerminateNotification;
+UIKIT_EXPORT NSString	*UIApplicationDidEnterBackgroundNotification;
+UIKIT_EXPORT NSString	*UIApplicationWillTerminateNotification;
 
 
 UIKIT_EXPORT int

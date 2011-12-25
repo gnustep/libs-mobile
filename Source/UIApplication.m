@@ -64,6 +64,18 @@
 
 #import "UIKit/UIApplication.h"
 
+/* Temporary stubs to replace GSDisplayServer */
+@interface GSUIDisplayServer : NSObject
+{
+}
+@end
+@implementation GSUIDisplayServer
+@end
+GSUIDisplayServer * GSUICurrentServer()
+{
+    return nil;
+}
+
 /* The -gui thread. See the comment in initialize_gnustep_backend. */
 NSThread *GSUIKitThread;
 
@@ -96,21 +108,23 @@ GSUIKitBundle(void)
 - (NSDictionary*) _notificationUserInfo;
 - (void) _openDocument: (NSString*)name;
 - (id) _targetForAction: (SEL)aSelector
-	      keyWindow: (NSWindow *)keyWindow
-	     mainWindow: (NSWindow *)mainWindow;
+	      keyWindow: (UIWindow *)keyWindow
+	     mainWindow: (UIWindow *)mainWindow;
 - (void) _windowDidBecomeKey: (NSNotification*) notification;
 - (void) _windowDidBecomeMain: (NSNotification*) notification;
 - (void) _windowDidResignKey: (NSNotification*) notification;
 - (void) _windowWillClose: (NSNotification*) notification;
 - (void) _workspaceNotification: (NSNotification*) notification;
 - (NSArray *) _openFiles;
+/*
 - (NSMenu *) _dockMenu;
+ */
 @end
 
 /*
  * Class variables
  */
-static NSEvent *null_event;
+static UIEvent *null_event;
 static Class arpClass;
 static NSNotificationCenter *nc;
 static UIApplication *uikitApp=nil;
@@ -225,7 +239,7 @@ static UIApplication *uikitApp=nil;
  */
 - (void) _init
 {
-  GSDisplayServer *srv;
+  GSUIDisplayServer *srv;
   NSDictionary *attributes;
   /* Initialization must be enclosed in an autorelease pool.  */
   CREATE_AUTORELEASE_POOL(_app_init_pool);
@@ -239,9 +253,9 @@ static UIApplication *uikitApp=nil;
   uikitApp = self;
 
   /* Connect to our window server.  */
-  srv = [GSDisplayServer serverWithAttributes: nil];
+  srv = [GSUIDisplayServer serverWithAttributes: nil];
   RETAIN(srv);
-  [GSDisplayServer setCurrentServer: srv];
+  [GSUIDisplayServer setCurrentServer: srv];
 
   /* Create a default context with the attributes of the main screen.  */
 /*
@@ -261,11 +275,9 @@ static UIApplication *uikitApp=nil;
 */
   /* Ivar already automatically initialized to NO when the app is
      created.  */
-  //_app_is_active = NO;
+  _app_is_active = NO;
   //_main_menu = nil;
-/*
   _windows_need_update = YES;
-*/
 
   /* Save the base library exception handler */
   defaultUncaughtExceptionHandler = NSGetUncaughtExceptionHandler();
@@ -273,11 +285,14 @@ static UIApplication *uikitApp=nil;
 /*
   NSSetUncaughtExceptionHandler(_NSAppKitUncaughtExceptionHandler);
  */
+/*
   _listener = [GSServicesManager newWithApplication: self];
-
-  /* NSEvent doesn't use -init so we use +alloc instead of +new.  */
-  _current_event = [NSEvent alloc]; // no current event
-  null_event = [NSEvent alloc];    // create dummy event
+  // FIXME: we will want to use an equivalent of GSServicesManager
+ */
+  
+  /* UIEvent doesn't use -init so we use +alloc instead of +new.  */
+  _current_event = [UIEvent alloc]; // no current event
+  null_event = [UIEvent alloc];    // create dummy event
 
   /* We are the end of responder chain.  */
   [self setNextResponder: nil];
@@ -566,11 +581,13 @@ static UIApplication *uikitApp=nil;
 
 - (void) dealloc
 {
-  GSDisplayServer *srv = GSServerForWindow(_app_icon_window);
-
+/*
+  GSUIDisplayServer *srv = GSUIServerForWindow(_app_icon_window);
+ */
+  GSUIDisplayServer *srv = nil; // FIXME
   if (srv == nil)
     {
-      srv = GSCurrentServer();
+      srv = GSUICurrentServer();
     }
 /*
   [[[NSWorkspace sharedWorkspace] notificationCenter]
@@ -666,7 +683,7 @@ static UIApplication *uikitApp=nil;
  */
 - (void) run
 {
-  NSEvent *e;
+  UIEvent *e;
   id distantFuture = [NSDate distantFuture];     /* Cache this, safe */
 
   if (_runLoopPool != nil)
@@ -695,15 +712,17 @@ static UIApplication *uikitApp=nil;
   while (_app_is_running)
     {
       IF_NO_GC(_runLoopPool = [arpClass new]);
-
+/*
       e = [self nextEventMatchingMask: NSAnyEventMask
 		untilDate: distantFuture
 		inMode: NSDefaultRunLoopMode
 		dequeue: YES];
-      
+  */
+      e = nil; // FIXME we are not dequeueing any events!
+    
       if (e != nil)
 	{
-	  NSEventType	type = [e type];
+	  UIEventType	type = [e type];
 
 	  // Catch and report any uncaught exceptions.
 	  NS_DURING
@@ -711,11 +730,15 @@ static UIApplication *uikitApp=nil;
 	      [self sendEvent: e];
 
 	      // update (en/disable) the services menu's items
+/*
+// FIXME we dont have NSPeriodic or NSMouseMoved. we also currently dont
+// use _listener nor _main_menu
 	      if (type != NSPeriodic && type != NSMouseMoved)
 		{
 		  [_listener updateServicesMenu];
 		  [_main_menu update];
 		}
+*/
 	    }
 	  NS_HANDLER
 	    {
@@ -755,7 +778,7 @@ static UIApplication *uikitApp=nil;
        * add dummy event to queue to assure loop cycles
        * at least one more time
        */
-      DPSPostEvent(GSCurrentServer(), null_event, NO);
+      DPSPostEvent(GSUICurrentServer(), null_event, NO);
     }
 }
 
@@ -765,7 +788,7 @@ static UIApplication *uikitApp=nil;
  */
 
 /* Private method used by GSDragView to dispatch drag events as Cocoa does. */
-- (void) _postAndSendEvent: (NSEvent *)anEvent
+- (void) _postAndSendEvent: (UIEvent *)anEvent
 {
   ASSIGN(_current_event, anEvent);
   [self sendEvent: anEvent];
@@ -791,7 +814,7 @@ static UIApplication *uikitApp=nil;
 
       case NSKeyDown:
 	{
-	  NSDebugLLog(@"NSEvent", @"send key down event\n");
+	  NSDebugLLog(@"UIEvent", @"send key down event\n");
 	  /* Key equivalents must be looked up explicitly in the Services menu
 	     after checking the main menu, as NSMenu's -performKeyEquivalent:
 	     ignores the Services menu. See the comment in that method for a
@@ -807,7 +830,7 @@ static UIApplication *uikitApp=nil;
 
       case NSKeyUp:
 	{
-	  NSDebugLLog(@"NSEvent", @"send key up event\n");
+	  NSDebugLLog(@"UIEvent", @"send key up event\n");
 	  [[theEvent window] sendEvent: theEvent];
 	  break;
 	}
@@ -817,12 +840,12 @@ static UIApplication *uikitApp=nil;
 	  NSWindow	*window = [theEvent window];
 
 	  if (!theEvent)
-	    NSDebugLLog(@"NSEvent", @"NSEvent is nil!\n");
+	    NSDebugLLog(@"UIEvent", @"NSEvent is nil!\n");
 	  if (type == NSMouseMoved)
 	    NSDebugLLog(@"NSMotionEvent", @"Send move (%d) to %@", 
 			type, window);
 	  else
-	    NSDebugLLog(@"NSEvent", @"Send NSEvent type: %d to %@", 
+	    NSDebugLLog(@"UIEvent", @"Send NSEvent type: %d to %@", 
 			type, window);
 	  if (window)
 	    [window sendEvent: theEvent];
@@ -836,7 +859,7 @@ static UIApplication *uikitApp=nil;
 /**
  * Returns the most recent event -run pulled off the event queue.
  */
-- (NSEvent*) currentEvent
+- (UIEvent*) currentEvent
 {
   return _current_event;
 }
@@ -848,9 +871,9 @@ static UIApplication *uikitApp=nil;
  * up to lastEvent.
  */
 - (void) discardEventsMatchingMask: (unsigned int)mask
-		       beforeEvent: (NSEvent *)lastEvent
+		       beforeEvent: (UIEvent *)lastEvent
 {
-  DPSDiscardEvents(GSCurrentServer(), mask, lastEvent);
+  DPSDiscardEvents(GSUICurrentServer(), mask, lastEvent);
 }
 
 /**
@@ -859,12 +882,12 @@ static UIApplication *uikitApp=nil;
  * queue, will wait for one until expiration, returning nil if none found.
  * See (EventType) for the list of masks.
  */
-- (NSEvent*) nextEventMatchingMask: (unsigned int)mask
+- (UIEvent*) nextEventMatchingMask: (unsigned int)mask
 			 untilDate: (NSDate*)expiration
 			    inMode: (NSString*)mode
 			   dequeue: (BOOL)flag
 {
-  NSEvent	*event;
+  UIEvent	*event;
 
   if (_windows_need_update)
     {
@@ -874,9 +897,9 @@ static UIApplication *uikitApp=nil;
     expiration = [NSDate distantPast];
 
   if (flag)
-    event = DPSGetEvent(GSCurrentServer(), mask, expiration, mode);
+    event = DPSGetEvent(GSUICurrentServer(), mask, expiration, mode);
   else
-    event = DPSPeekEvent(GSCurrentServer(), mask, expiration, mode);
+    event = DPSPeekEvent(GSUICurrentServer(), mask, expiration, mode);
 
   if (event == null_event)
     {
@@ -891,13 +914,13 @@ IF_NO_GC(NSAssert([event retainCount] > 0, NSInternalInconsistencyException));
        * If we are not in a tracking loop, we may want to unhide a hidden
        * because the mouse has been moved.
        */
-      if (mode != NSEventTrackingRunLoopMode)
+      if (mode != UIEventTrackingRunLoopMode)
 	{
 	  _windows_need_update = YES;
 /*
 	  if ([NSCursor isHiddenUntilMouseMoves])
 	    {
-	      NSEventType type = [event type];
+	      UIEventType type = [event type];
 
 	      if ((type == NSLeftMouseDown) || (type == NSLeftMouseUp)
 		|| (type == NSOtherMouseDown) || (type == NSOtherMouseUp)
@@ -922,9 +945,9 @@ IF_NO_GC(NSAssert([event retainCount] > 0, NSInternalInconsistencyException));
  * to an application, or, for whatever reason, to allow a real event to be
  * re-dispatched.
  */
-- (void) postEvent: (NSEvent *)event atStart: (BOOL)flag
+- (void) postEvent: (UIEvent *)event atStart: (BOOL)flag
 {
-  DPSPostEvent(GSCurrentServer(), event, flag);
+  DPSPostEvent(GSUICurrentServer(), event, flag);
 }
 
 /**
@@ -1212,7 +1235,10 @@ IF_NO_GC(NSAssert([event retainCount] > 0, NSInternalInconsistencyException));
 
   processIdentifier = [NSNumber numberWithInt:
     [[NSProcessInfo processInfo] processIdentifier]];
+  /*
   port = [(GSServicesManager*)_listener port];
+   */
+  port = nil; /* FIXME: we do want to use an equivalent of GSServicesManager */
   path = [[NSBundle mainBundle] bundlePath];
   if (port == nil)
     {

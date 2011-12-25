@@ -45,8 +45,8 @@ include $(GNUSTEP_MAKEFILES)/common.make
 PROJECT_NAME=UIKit
 FRAMEWORK_NAME=$(PROJECT_NAME)
 
-$(PROJECT_NAME)_OBJC_FILES=$(wildcard *.m)
-$(PROJECT_NAME)_HEADER_FILES=$(wildcard *.h) #$(filter-out CoreDataUtilities.h, $(wildcard *.h))
+$(PROJECT_NAME)_OBJC_FILES=$(wildcard Source/*.m)
+$(PROJECT_NAME)_HEADER_FILES=$(wildcard Headers/UIKit/*.h) #$(filter-out CoreDataUtilities.h, $(wildcard *.h))
 
 $(PROJECT_NAME)_RESOURCE_FILES=$(wildcard Resources/*)
 
