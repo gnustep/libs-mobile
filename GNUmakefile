@@ -1,58 +1,82 @@
-# The main makefile of the GNUstep UIKit framework.
-# Copyright (C) 2005,2011 Free Software Foundation, Inc.
 #
-# Written by:  Saso Kiselkov <diablos@manga.sk>
-# Date: August 2005
-# Modified by:  Ivan Vucica <ivan@vucica.net>
-# Date: November 2011
+#  Top level makefile for GNUstep GUI Library
 #
-# This file is part of the GNUstep UIKit framework.
+#  Copyright (C) 1997 Free Software Foundation, Inc.
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+#  Author: Scott Christley <scottc@net-community.com>
 #
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
+#  This file is part of the GNUstep GUI Library.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free
-# Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02111 USA.
+#  This library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU Lesser General Public
+#  License as published by the Free Software Foundation; either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+#  Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public
+#  License along with this library; see the file COPYING.LIB.
+#  If not, see <http://www.gnu.org/licenses/> or write to the 
+#  Free Software Foundation, 51 Franklin Street, Fifth Floor, 
+#  Boston, MA 02110-1301, USA.
 
 ifeq ($(GNUSTEP_MAKEFILES),)
  GNUSTEP_MAKEFILES := $(shell gnustep-config --variable=GNUSTEP_MAKEFILES 2>/dev/null)
-  ifeq ($(GNUSTEP_MAKEFILES),)
-    $(warning )
-    $(warning Unable to obtain GNUSTEP_MAKEFILES setting from gnustep-config!)
-    $(warning Perhaps gnustep-make is not properly installed,)
-    $(warning so gnustep-config is not in your PATH.)
-    $(warning )
-    $(warning Your PATH is currently $(PATH))
-    $(warning )
-  endif
 endif
 
 ifeq ($(GNUSTEP_MAKEFILES),)
   $(error You need to set GNUSTEP_MAKEFILES before compiling!)
 endif
 
+PACKAGE_NAME = gnustep-gui
+export PACKAGE_NAME
+RPM_DISABLE_RELOCATABLE=YES
+PACKAGE_NEEDS_CONFIGURE = YES
 
+SVN_MODULE_NAME = gui
+SVN_BASE_URL = svn+ssh://svn.gna.org/svn/gnustep/libs
+
+
+GNUSTEP_LOCAL_ADDITIONAL_MAKEFILES=gui.make
 include $(GNUSTEP_MAKEFILES)/common.make
 
-PROJECT_NAME=UIKit
-FRAMEWORK_NAME=$(PROJECT_NAME)
+include ./Version
 
-$(PROJECT_NAME)_OBJC_FILES=$(wildcard Source/*.m)
-$(PROJECT_NAME)_HEADER_FILES=$(wildcard Headers/UIKit/*.h) #$(filter-out CoreDataUtilities.h, $(wildcard *.h))
+# Don't build docs by default
+doc=no
 
-$(PROJECT_NAME)_RESOURCE_FILES=$(wildcard Resources/*)
+#
+# The list of subproject directories
+#
+SUBPROJECTS = \
+Source \
+Images \
+Sounds \
+Model \
+Tools \
+Panels \
+PrinterTypes \
+TextConverters \
+ColorPickers \
+KeyBindings \
+Resources \
+Printing \
+Themes \
+Tests
 
-$(PROJECT_NAME)_LANGUAGES=$(basename $(wildcard *.lproj))
-$(PROJECT_NAME)_LOCALIZED_RESOURCE_FILES=$(sort $(notdir $(wildcard *.lproj/*)))
+# Build and install sounds, if sound support is present.
+SUBPROJECTS += $(BUILD_SOUNDS)
+
+ifeq ($(doc), yes)
+SUBPROJECTS += Documentation
+endif
 
 -include GNUmakefile.preamble
-include $(GNUSTEP_MAKEFILES)/framework.make
--include GNUmakefile.postamble
+
+include $(GNUSTEP_MAKEFILES)/aggregate.make
+include $(GNUSTEP_MAKEFILES)/Master/deb.make
+
+include GNUmakefile.postamble
